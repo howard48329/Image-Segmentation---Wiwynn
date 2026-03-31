@@ -1,0 +1,22 @@
+__pycache__/
+*.py[cod]
+*$py.class
+
+# 虛擬環境
+venv/
+env/
+.venv/
+
+# 環境變數與機密資訊
+.env
+
+# 快取、測試資料與模型權重
+data/.cache/
+data/input/
+data/output/
+model_weights/
+
+# IDE 與系統檔
+.idea/
+.vscode/
+.DS_Store

@@ -1,0 +1,71 @@
+==================================================
+Coco dataset annotation 結構
+==================================================
+
+1. COCO JSON 最上層包含的結構 (Keys):
+['info', 'licenses', 'images', 'annotations', 'categories']
+
+2. 'images' (圖片基本資訊) 陣列的首筆資料範例:
+{
+    "license": 4,
+    "file_name": "000000397133.jpg",
+    "coco_url": "http://images.cocodataset.org/val2017/000000397133.jpg",
+    "height": 427,
+    "width": 640,
+    "date_captured": "2013-11-14 17:02:52",
+    "flickr_url": "http://farm7.staticflickr.com/6116/6255196340_da26cf2c9e_z.jpg",
+    "id": 397133
+}
+
+3. 'categories' (類別清單) 陣列的首筆資料範例:
+{
+    "supercategory": "person",
+    "id": 1,
+    "name": "person"
+}
+
+4. 'annotations' (標註資料與座標) 陣列的首筆資料範例:
+{
+    "segmentation": [
+        [
+            510.66,
+            423.01,
+            511.72,
+            420.03,
+            510.45,
+            416.0,
+            "... (其餘座標點太長，為畫面美觀已省略)"
+        ]
+    ],
+    "area": 702.1057499999998,
+    "iscrowd": 0,
+    "image_id": 289343,
+    "bbox": [
+        473.07,
+        395.93,
+        38.65,
+        28.67
+    ],
+    "category_id": 18,
+    "id": 1768
+}
+
+📊 資料總論:
+- 圖片總數 (Images)     : 5000 張
+- 類別總數 (Categories) : 80 類
+- 標註總數 (Annotations): 36781 個物件
+
+
+========================================
+yolov8n-seg 模型說明
+========================================
+
+1. 模型架構
+- YOLOv8n-seg 是一個基於 Transformer 的全景分割模型，由 Ultralytics 開發。
+- 模型架構包含一個 Backbone、一個 Neck 和一個 Head，其中 Head 負責輸出分割掩碼。
+- 模型大小為 6.6MB，推理速度為 166 FPS，適用於邊緣裝置。
+
+2. 模型輸入資料格式
+- 輸入圖片大小為 640x640，支援 RGB 格式。
+- 輸入圖片格式為 numpy array，shape 為 (640, 640, 3)，dtype 為 float32。
+- 輸入圖片像素值範圍為 [0, 255]，需要轉換為 [0, 1] 範圍。

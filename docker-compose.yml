@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: wiwynn-segmentation-api
+    ports:
+      - "8000:8000"
+    volumes:
+      # 將整個 app/ 資料夾掛載，開啟後端程式碼即時熱重載 (Hot-Reloading) 方便開發
+      - ./app:/workspace/app
+      # 將所有的資料夾 (包含輸入/輸出/快取/模型權重) 掛載出來，
+      # 這樣跑出來的分析結果或模型可以持久化留在本機
+      - ./data:/workspace/data
+      - ./model_weights:/workspace/model_weights
+    environment:
+      - PYTHONUNBUFFERED=1
+    # 覆寫 Dockerfile 中的 CMD，加入 --reload 參數以利開發時修改程式碼會自動重新啟動
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload

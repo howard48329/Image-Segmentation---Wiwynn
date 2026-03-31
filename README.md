@@ -1,2 +1,108 @@
-# Image-Segmentation---Wiwynn
-2 Days project for interview
+# 🐾 Image Segmentation Metrology API
+
+這是一個專為「影像分割與測量學 (Metrology)」設計的端到端 (End-to-End) 深度學習後端專案。
+本專案採用業界高標準的 **高精度雙引擎架構 (Top-Down Crop-to-Pose)**，能精準切割出影像中的人物或動物輪廓，並量測出特定特徵點（例如雙眼）的幾何像素距離。
+
+---
+
+## 📌 專案介紹
+本系統主要解決傳統影像分割演算法難以兼顧「全域輪廓」與「局部關鍵點特徵」的問題。我們實作了一個基於 RESTful API 的微服務，當使用者上傳包含「人或動物」的影像時，系統會自動執行以下流程：
+1. **第一層推論**：自動標記出物體之 Mask 輪廓地圖與 Bounding Box。
+2. **第二層推論 (Crop-to-Pose)**：將各個 BBox 裁切並加入環境填充(Margin Padding)後放大，針對特寫畫面進行高精度特徵點(Keypoints)捕捉，再透過反向映射(Global Mappping)換算回原圖座標。
+3. **幾何量測**：透過尤拉公式 (Euclidean Distance) 精準計算出 **單一目標的雙眼間距** 以及 **跨目標之間的右眼間距像素**。
+4. **報表與視覺化**：繪製遮罩、點位與幾何連線於原圖中，並將量測數據自動匯出至 CSV 檔案。
+
+---
+
+## 🛠️ 技術棧說明
+
+* **後端 API 框架**: `FastAPI` (非同步、高效能) + `Uvicorn`
+* **AI 深度學習引擎**: `Ultralytics (YOLOv8)` + `PyTorch (CPU-Optimized)`
+* **影像處理與數學運算**: `OpenCV-Python-Headless`, `NumPy`
+* **組態與環境變數管理**: `Pydantic-Settings` (.env 設定)
+* **基礎設施與容器化部署**: `Docker`, `Docker Compose`
+
+---
+
+## 🚀 快速啟動：Docker 部署指令 (推薦模式)
+
+本專案已完全容器化。Dockerfile 經過特殊調校（強制要求拉取純 CPU 版的 Torch Wheel），能避免拉取高達數 GB 的無用 CUDA 驅動元件，讓映像檔保持極致輕量與快速部署！
+
+1. **複製專案並準備環境變數**
+   ```bash
+   git clone <repository-url>
+   cd Image-Segmentation---Wiwynn
+   cp .env.example .env
+   ```
+
+2. **一鍵建置並啟動服務**
+   ```bash
+   docker compose up --build
+   ```
+   > 💡 **溫馨提示**：首次啟動時，系統內建的「防呆機制」會觸發自動腳本，從雲端抓取最新的 YOLOv8 權重並快取於本機的 `model_weights/` 資料夾，下載完畢後伺服器會自動於 Port `8000` 啟動。
+
+---
+
+## 💻 本地運行步驟 (無 Docker 依賴環境)
+
+若您不希望使用 Docker，本機需具備 Python 3.10+ 環境：
+
+1. **建立虛擬環境與安裝依賴**：
+   ```bash
+   python -m venv venv
+   source venv/bin/activate  # Windows 使用者請執行 venv\Scripts\activate
+   pip install -r requirements.txt
+   ```
+2. **複製設定檔**：
+   ```bash
+   cp .env.example .env
+   ```
+3. **啟動 FastAPI 開發伺服器**：
+   ```bash
+   uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+   ```
+
+---
+
+## 📚 API 文件連結與使用方法
+
+拜 FastAPI 所賜，本服務內建了互動式的 Swagger UI 供開發者無縫測試。當伺服器啟動後，請用瀏覽器開啟：
+
+👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
+
+### 圖形化介面操作步驟：
+1. 進入 Docs 頁面，點開綠色的 `POST /api/analyze` 路由區塊。
+2. 點擊右上角的 **`Try it out`**。
+3. 點選 **`Choose File`** 按鈕上傳測試照片。(可使用專案內自帶的 `data/test_data/` 圖片測試)
+4. 點擊巨大藍色按鈕 **`Execute`**。
+5. **觀察結果**：
+   * 網頁下方會立即回傳包含各個動物距離數據的 JSON。
+   * 您可以直接到專案的 `data/output/` 資料夾中欣賞帶有測量連線與精準遮罩的視覺化產出圖。
+   * 資料數據也會自動被記錄到 `data/sample.csv` 中。
+
+---
+
+## 🔐 測試帳號資訊
+
+本專案主要用於展示軟體工程架構與 AI Model Fusion 技術，為了讓面試官與測試人員能最快速地體驗核心功能：
+* **目前 API 端點設定為完全公開 (Public Access)**。
+* **無須準備測試帳號、不需申請 API Key 或 JWT Token**，開啟 Swagger 介面即可直接使用。
+
+*(註：若未來實際上線有資安防護需求，架構層非常容易透過 FastAPI Dependency 疊加 OAuth2 驗證保護)*
+
+---
+
+## 🧰 專案資料夾結構與輔助工具
+
+```text
+.
+├── app/               # 後端實作 (main: 介面, model: 雙引擎核心, config: 設定檔)
+│   └── utils/         # geometry: 幾何像素距離引擎 / data_proc: 視覺化引擎
+├── data/              # 本機目錄映射 (input 測資圖/ output 結果圖 / sample.csv 報表)
+├── model_weights/     # 本地 AI 模型緩存 (會自動被 .gitignore 排除)
+├── scripts/           # 自動化與維運腳本
+│   ├── download_coco.py    # 💰 若缺乏圖片，可跑此腳本自動去 COCO 抓包含人/動物的圖
+│   └── download_weights.py # 網路權重拉取邏輯
+├── docker-compose.yml # 服務編排腳本
+└── Dockerfile         # 優化過的微服務封裝檔
+```

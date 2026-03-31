@@ -1,0 +1,35 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments (環境變數與虛擬環境)
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Machine Learning & AI Files (機器學習權重)
+# 排除動輒數百 MB 的 YOLO / PyTorch 模型權重
+model_weights/
+*.pt
+*.pth
+*.onnx
+
+# Datasets & Temporary Files (資料集與輸出)
+# 排除 COCO 會下載的幾十 MB 快取以及測試輸入/輸出圖檔
+data/.cache/
+data/input/
+data/output/
+
+# 如果你希望紀錄距離的 sample.csv 不進版控，可將下方取消註解
+# data/sample.csv
+
+# IDEs & OS System Files (開發工具與系統檔)
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
