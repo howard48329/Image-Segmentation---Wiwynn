@@ -23,7 +23,7 @@ logger = logging.getLogger(__name__)
 
 class SegmentationEngine:
     """
-    高精度雙引擎架構 (Top-Down Crop-to-Pose Architecture):
+    雙引擎架構 (Top-Down Crop-to-Pose Architecture):
     
     1. Seg Model (第一層推論): 負責精準切割出全圖動物的地形圖 (Mask) 與輪廓矩形 (BBox)。
     2. 局部裁切 (Image Cropping): 透過 BBox 將動物特寫以陣列切片 (Slice) 的方式單獨截取。
@@ -58,21 +58,21 @@ class SegmentationEngine:
         
         logger.info(f"正在載入 Pose 模型 ({pose_model_path}) ...")
         self.pose_model = YOLO(pose_model_path)
-        logger.info("🔥 高精度雙引擎模型載入成功！")
+        logger.info("模型載入成功！")
 
     def predict(self, img_cv2: np.ndarray) -> List[Dict[str, Any]]:
         """
-        輸入單張 OpenCV 影像，回傳精準量測動物所需的預測資料陣列。
+        輸入單張影像，回傳量測動物所需的預測資料陣列。
         """
         if not self.seg_model or not self.pose_model:
             raise RuntimeError("模型尚未載入，請先呼叫 load()。")
 
         # --- 1. 第一層推論：抓取全張圖片中所有目標(人/鳥/動物)的 Mask 與 Bbox ---
-        seg_results = self.seg_model.predict(source=img_cv2, conf=0.25, classes=self.target_classes, verbose=False)[0]
+        seg_results = self.seg_model.predict(source=img_cv2, conf=0.5, classes=self.target_classes, verbose=False)[0]
 
         predictions = []
         if seg_results.masks is None or seg_results.boxes is None:
-            return predictions # 沒抓到動物就提早返回，節省算力
+            return predictions # 沒抓到動物就提早返回
 
         seg_boxes = seg_results.boxes.xyxy.cpu().numpy()
         class_ids = seg_results.boxes.cls.cpu().numpy().astype(int)
@@ -111,7 +111,7 @@ class SegmentationEngine:
             
             # --- 4. 第二層推論：高精度尋找特徵點 ---
             # 把放大特寫的 crop_img 丟進去，且強制不限制類別以便讓官方 pose 發揮盲測潛力
-            pose_results = self.pose_model.predict(source=crop_img, conf=0.15, verbose=False)[0]
+            pose_results = self.pose_model.predict(source=crop_img, conf=0.25, verbose=False)[0]
             
             matched_kpts = {"right_eye": None, "left_eye": None}
             
@@ -120,11 +120,11 @@ class SegmentationEngine:
                 # 只取信心度最高 (第一組) 的預測結果
                 kpts = pose_results.keypoints.data[0].cpu().numpy() # shape [17, 3]
                 
-                # COCO 人體骨架 index: 1 (左眼), 2 (右眼)
-                lx_crop, ly_crop, lconf = kpts[1]
-                rx_crop, ry_crop, rconf = kpts[2]
+                # COCO 人體骨架 index: 0 (左眼), 1 (右眼)
+                lx_crop, ly_crop, lconf = kpts[0]
+                rx_crop, ry_crop, rconf = kpts[1]
                 
-                # --- 5. 精彩加分點：局部座標反推全域座標 (Global Coordinate Mapping) ---
+                # --- 5. 局部座標反推全域座標 ---
                 # 將特寫圖裡面的 (x, y)，加上當初裁切起點的 (crop_x1, crop_y1)，反算回實際像素座標！
                 if rconf > 0.1: 
                     matched_kpts["right_eye"] = (int(rx_crop) + crop_x1, int(ry_crop) + crop_y1)

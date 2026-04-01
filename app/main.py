@@ -6,6 +6,7 @@ import logging
 from app.model import SegmentationEngine
 from app.utils.geometry import analyze_measurements
 from app.utils.data_proc import bytes_to_cv2, draw_and_save_results, append_to_csv
+from app.schemas import AnalyzeResponse
 
 # 設定日誌
 logging.basicConfig(level=logging.INFO)
@@ -41,7 +42,7 @@ def read_root():
         "message": "歡迎來到 Image Segmentation Metrology API。請前往 /docs 查看詳細 API 文件。"
     }
 
-@app.post("/api/analyze")
+@app.post("/api/analyze", response_model=AnalyzeResponse, summary="分析影像並計算特徵點幾何距離")
 async def analyze_image(file: UploadFile = File(...)):
     """
     核心 API (Metrology End-to-End Pipeline)：
@@ -63,10 +64,11 @@ async def analyze_image(file: UploadFile = File(...)):
         
         # 防呆機制：如果沒有偵測到動物
         if len(predictions) == 0:
-            return JSONResponse(status_code=200, content={
-                "status": "warning",
-                "message": "在圖片中未偵測到任何動物目標。"
-            })
+            return AnalyzeResponse(
+                status="warning",
+                filename=file.filename,
+                message="在圖片中未偵測到任何符合的目標。"
+            )
             
         # 3. 計算測量學距離 (尤拉公式)
         measurements = analyze_measurements(predictions)
@@ -77,16 +79,14 @@ async def analyze_image(file: UploadFile = File(...)):
         # 5. 將量測數據紀錄到 CSV 報表中
         append_to_csv(file.filename, measurements)
         
-        # 6. 回傳標準化 JSON 格式給前端或使用者
-        final_result = {
-            "status": "success",
-            "filename": file.filename,
-            "measurements": measurements,
-            "output_image_path": output_img_path,
-            "detected_animals_count": len(predictions)
-        }
-        
-        return JSONResponse(content=final_result)
+        # 6. 回傳強型別驗證過的 Pydantic Schema
+        return AnalyzeResponse(
+            status="success",
+            filename=file.filename,
+            measurements=measurements,
+            output_image_path=output_img_path,
+            detected_animals_count=len(predictions)
+        )
         
     except Exception as e:
         logger.error(f"分析影像時發生錯誤: {str(e)}")

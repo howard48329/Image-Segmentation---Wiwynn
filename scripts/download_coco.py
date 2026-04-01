@@ -68,8 +68,9 @@ def download_images(num_images=5):
     with open(ann_file, 'r', encoding='utf-8') as f:
         coco_data = json.load(f)
         
-    # 動態找出父類別 (supercategory) 為 'animal' 或 'person' 的所有子類別 ID
-    target_category_ids = {cat['id'] for cat in coco_data['categories'] if cat['supercategory'] in ['animal', 'person']}
+    # 指定精確的篩選名單：人、貓、狗、羊、牛、馬
+    desired_classes = {'person', 'cat', 'dog', 'sheep', 'cow', 'horse'}
+    target_category_ids = {cat['id'] for cat in coco_data['categories'] if cat['name'] in desired_classes}
     
     # 建立 image_id 的快速查詢字典，方便稍後取得圖片網址
     images_dict = {img['id']: img for img in coco_data['images']}
@@ -114,4 +115,4 @@ def download_images(num_images=5):
 
 if __name__ == "__main__":
     # 執行腳本，預設下載 50 張符合條件的圖片
-    download_images(num_images=50)
+    download_images(num_images=300)

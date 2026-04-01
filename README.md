@@ -1,7 +1,7 @@
 # 🐾 Image Segmentation Metrology API
 
 這是一個專為「影像分割與測量學 (Metrology)」設計的端到端 (End-to-End) 深度學習後端專案。
-本專案採用業界高標準的 **高精度雙引擎架構 (Top-Down Crop-to-Pose)**，能精準切割出影像中的人物或動物輪廓，並量測出特定特徵點（例如雙眼）的幾何像素距離。
+本專案採用業界高標準的 **雙引擎架構 (Top-Down Crop-to-Pose)**，能精準切割出影像中的人物或動物輪廓，並量測出特定特徵點（例如雙眼）的幾何像素距離。
 
 ---
 
@@ -24,13 +24,25 @@
 
 ---
 
+## 📦 步驟零：建立與自動準備測試資料集
+
+專案預設需要包含多隻目標的影像來進行量測展示。如果您沒有合適的測資圖片，專案內建了一支強大的自動化輔助腳本。它會自動連線至 MS COCO Dataset 驗證集，並精準過濾下載「**至少包含兩個目標（人、貓、狗、羊、牛、馬）**」的高品質測試圖集。
+
+請在您的本機終端機運行以下指令：
+```bash
+python scripts/download_coco.py
+```
+> 執行完畢後，測試圖片會自動準備於 `data/input/` 目錄下，供您隨後測試 API 介面使用！
+
+---
+
 ## 🚀 快速啟動：Docker 部署指令 (推薦模式)
 
 本專案已完全容器化。Dockerfile 經過特殊調校（強制要求拉取純 CPU 版的 Torch Wheel），能避免拉取高達數 GB 的無用 CUDA 驅動元件，讓映像檔保持極致輕量與快速部署！
 
 1. **複製專案並準備環境變數**
    ```bash
-   git clone <repository-url>
+   git clone https://github.com/howard48329/Image-Segmentation---Wiwynn
    cd Image-Segmentation---Wiwynn
    cp .env.example .env
    ```
@@ -66,18 +78,18 @@
 
 ## 📚 API 文件連結與使用方法
 
-拜 FastAPI 所賜，本服務內建了互動式的 Swagger UI 供開發者無縫測試。當伺服器啟動後，請用瀏覽器開啟：
+當伺服器啟動後，請用瀏覽器開啟：
 
 👉 **[http://localhost:8000/docs](http://localhost:8000/docs)**
 
 ### 圖形化介面操作步驟：
 1. 進入 Docs 頁面，點開綠色的 `POST /api/analyze` 路由區塊。
 2. 點擊右上角的 **`Try it out`**。
-3. 點選 **`Choose File`** 按鈕上傳測試照片。(可使用專案內自帶的 `data/test_data/` 圖片測試)
-4. 點擊巨大藍色按鈕 **`Execute`**。
+3. 點選 **`Choose File`** 按鈕上傳測試照片。(可使用步驟零下載的圖片)
+4. 點擊藍色按鈕 **`Execute`**。
 5. **觀察結果**：
    * 網頁下方會立即回傳包含各個動物距離數據的 JSON。
-   * 您可以直接到專案的 `data/output/` 資料夾中欣賞帶有測量連線與精準遮罩的視覺化產出圖。
+   * 您可以直接到專案的 `data/output/` 資料夾中查看帶有測量連線與精準遮罩的視覺化產出圖。
    * 資料數據也會自動被記錄到 `data/sample.csv` 中。
 
 ---

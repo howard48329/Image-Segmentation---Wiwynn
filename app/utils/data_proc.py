@@ -80,10 +80,19 @@ def append_to_csv(filename: str, measurements: Dict[str, Any]):
     animal_1_dist = measurements.get("animal_1", {}).get("eye_distance_pixels", "N/A")
     animal_2_dist = measurements.get("animal_2", {}).get("eye_distance_pixels", "N/A")
     
+    # 取出對應的類別名稱
+    animal_1_cls = measurements.get("animal_1", {}).get("class", "N/A")
+    animal_2_cls = measurements.get("animal_2", {}).get("class", "N/A")
+    
     with open(csv_path, mode='a', newline='', encoding='utf-8') as f:
         writer = csv.writer(f)
         if not csv_exists:
             # 第一行寫入標題 (Header)
-            writer.writerow(["Filename", "Animal_1_Eye_Dist_px", "Animal_2_Eye_Dist_px", "Inter_Animal_Right_Eye_Dist_px"])
+            writer.writerow([
+                "Filename", 
+                "Animal_1_Class", "Animal_1_Eye_Dist_px", 
+                "Animal_2_Class", "Animal_2_Eye_Dist_px", 
+                "Inter_Animal_Right_Eye_Dist_px"
+            ])
             
-        writer.writerow([filename, animal_1_dist, animal_2_dist, inter_dist])
+        writer.writerow([filename, animal_1_cls, animal_1_dist, animal_2_cls, animal_2_dist, inter_dist])
