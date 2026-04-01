@@ -43,12 +43,12 @@ COCO Dataset Annotation 結構 (參考)
 
 1. 局部向量反向推論至全域座標 (Global Coordinate Mapping)
 - 由於眼睛點位是從「特寫裁切圖」取得的，我們必須利用「向量推移」將它還原回最初的整張原圖。
-- 📍 **映射公式**：
+- **映射公式**：
   原圖絕對座標 (X_global, Y_global) = (X_local + BBox_X_min, Y_local + BBox_Y_min)
 
 2. 歐氏幾何像素距離 (Euclidean Distance Formula)
 - 測量學核心：兩特徵點 (Point A, Point B) 之間的最短直線直線距離 (像素 px)。
-- 📐 **計算公式**：
+- **計算公式**：
   Distance = √((X_b - X_a)² + (Y_b - Y_a)²)
 - **程式實作**：使用 `math.hypot(x2 - x1, y2 - y1)` 達成最佳效能與浮點數防溢位。(詳見專案內 `app/utils/geometry.py`)
 
